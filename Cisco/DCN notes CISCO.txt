@@ -1,0 +1,160 @@
+1/7/25
+using vlan pwede maglagay ng diff subnets
+
+within just a single LAN
+
+single LAN multiple VLAN
+
+SWITCH
+DHCP
+* 3 diff pools 
+
+isa isang dhcp pool (diff names)
+
+fe 0/1 and so on
+
+VLAN
+
+lahat ng ports part ng vlan1
+
+from vlan 1 lipat sa vlan 10 for NetA, vlan20 for NetB....
+
+SWITCH UNA SIMULAN
+en
+conf t
+interface range fastEthernet 0/1-3
+
+switchport mode access
+switchport access vlan 10
+exit
+
+balik na sa int range 
+
+exit (punta config) after doon. balik sa switch
+interface GigabitEthernet 0/1
+switchport mode trunk
+switchport trunk allow vlan all
+(kapag may 5 networks may vlan 10, 20, 30, 40, 50. Pero kapag specific trunk lang need, 10,30	)
+
+2 types of ports
+access port - ports facing hosts (ports 1-9 - access ports)
+trunk port - ports facing switches ()
+
+ipconfig - for checking
+ipconfig /renew - to renew
+fill in the blanks - possible exam
+
+ROUTER
+en 
+conf t
+ip dhcp pool Network-A
+network (192.168.X.0 255.255.255.0)
+default-router 192.168.X.1
+exit
+
+ulit ulitin lang hanggang sa net C
+
+pag pumasok sa vlan, nasa sub interface si router
+
+
+
+interface GigabitEthernet 0/1.10 (for vlan10 yan)
+encapsulation dot1q 10(to identify if anong vlan)
+ip address 192.168.X.1 255.255.255.0 (default router to)
+exit 
+pasok na sa 0/1.20, encapsule, ip add 
+after lahat exit na mapunta dapat sa privilege mode(sa config), pasok sa interface
+
+interface GigabitEthernet 0/1
+no shutdown
+
+
+1/14/25
+static - manual adding/configuration of routes / protocol/network from router
+dynamic - used for larger nets
+
+RouterA> en
+conf t 
+ip route 203.177.X.0 255.255.255.0 10.10.10.2 (next-hop IP si 10...)
+ip route 222.127.X.0 255.255.255.0 10.10.10.2 
+
+(Punta na kay Router B)
+ip route 192.168.X.0 255.255.255.0 10.10.10.1 (next-hop IP si 10...)
+
+(ip route means nag aadd ng static route yung 203..., then subnet yung 255..., then hahanapin ni router kung sino yung titingnan 10..., Yung 10.10.10.2, link siya mula kay Router A to Router B)
+
+
+
+CHECKING 
+host inutusan iping yung ip, other network siya di part ng net. Kausapin si router kung nakikita niya yung ip na cinall sa routing table, pag Nakita mapiping ngayon ni host yung ip add, Basta dapat makiktia sa routing table. If di nakikita sa RT, di niya mapiping yung ip, magbibigay ng unsuccessful (address?) 
+
+
+STATIC ROUTING
+int gi 0/1
+ip add (ip .1 subnet)
+no shutdown
+
+
+OCT 22
+change hostname - hostname SWITCH_1 (dapat nasa config)
+set password - enable password PASSWORD (exit tas show run, makikita doon yung pass mo)
+set password secret - enable secret PASSWORD
+set ip address sa ip config
+
+NOV 26
+same lang ata ng ginawa sa oct 22
+(gawa gawa ko lang nilagyan ko speed. ewan ko kasi kung dito yun yung may speed kineme)
+interface range fa 0/1-4
+speed 100
+duplex full
+(dapat lagyan no shutdown lagi)
+show ip interface brief - para makita kung ano yung may unassigned and assigned
+
+
+
+COURSEWORK 7
+assign ip sa router
+int gi 0/1 
+ip add 
+
+
+1/21/25
+static - manually added (using config ip route. Ung ginagawa ko)
+
+Dynamic routing
+
+
+each router na connected dapat may ip route
+bwat isang router na connect dapat mag dagdag
+
+2types of dynamic
+IGP - nasa iisang network, kung network ni bpi, si bpi lang kasama. 
+  Other CLASS of PROTOCOL
+	- RIP/RIPv2 - 16 routers lang limit
+	- OSPF - basta hinahanap lag nito yung shortest path
+	- EIGRP - for cisco lang (baka raw true or false)
+EGP - ginagamit kung separate networks ang mag ccombine
+   Common na ginagamit sa EGP
+	- BGP - 
+
+AS - Autonomous system (may unique AS ang isang net)
+BGP looking glass - dito tinintingnan kung na kay globe ba or pldt yung internet
+local preference - ng bgp from pldt to globe 
+		 - kung ano yung mas shortest ito yung mas preferred
+
+
+2911 na gagamitin kasi may tatlong interface to
+
+Router muna gawin ko
+lahat ng network ips 
+network 
+
+
+RouterA lagay muna 1.1.1.0 255.0 (gawin to sa B at C)
+lagay ng ip add sa gi 0/1 q tas dapat .1 yung dulo
+
+
+
+
+
+

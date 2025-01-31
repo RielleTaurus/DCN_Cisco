@@ -1,0 +1,1009 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. test2.
+       ENVIRONMENT DIVISION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+           SELECT VOLUNTEERS ASSIGN TO "VOLUNTEERS.dat"
+           ORGANIZATION IS LINE SEQUENTIAL.
+      *    RECORD KEY IS VOLUNTEER_USERNAME.
+
+           SELECT DONORS ASSIGN TO "DONORS.dat"
+           ORGANIZATION IS LINE SEQUENTIAL.
+      *    RECORD KEY IS DONOR_USERNAME.
+
+           SELECT TEMP_VOLUNTEER ASSIGN TO "TEMP_VOLUNTEER.dat"
+           ORGANIZATION IS LINE SEQUENTIAL.
+
+           SELECT TEMP_DONORS ASSIGN TO "TEMP_DONORS.dat"
+           ORGANIZATION IS LINE SEQUENTIAL.
+
+           SELECT DONATIONS ASSIGN TO "DONATIONS.dat"
+           ORGANIZATION IS LINE SEQUENTIAL.
+
+       DATA DIVISION.
+       FILE SECTION.
+       FD  VOLUNTEERS.
+       01  VOLUNTEER-RECORDS.
+           05 VOLUNTEER_USERNAME PIC X(15).
+           05 VOLUNTEER_PASSWORD PIC X(25).
+           05 VOLUNTEER_FULLNAME PIC X(35).
+           05 VOLUNTEER_EMAIL PIC X(35).
+           05 VOLUNTEER_PHONE PIC X(11).
+
+       FD  TEMP_VOLUNTEER.
+       01  TEMP-VOLUNTEER-RECORDS.
+           05 V_USERNAME_TEMP PIC X(15).
+           05 V_PASSWORD_TEMP PIC X(25).
+           05 V_FULLNAME_TEMP PIC X(35).
+           05 V_EMAIL_TEMP PIC X(35).
+           05 V_PHONE_TEMP PIC X(11).
+
+       FD  DONORS.
+       01  DONOR-RECORDS.
+           05 DONOR_USERNAME PIC X(15).
+           05 DONOR_PASSWORD PIC X(25).
+           05 DONOR_FULLNAME PIC X(35).
+           05 DONOR_EMAIL PIC X(35).
+           05 DONOR_PHONE PIC X(11).
+
+       FD  TEMP_DONORS.
+       01  TEMP-DONORS-RECORDS.
+           05 D_USERNAME_TEMP PIC X(15).
+           05 D_PASSWORD_TEMP PIC X(25).
+           05 D_FULLNAME_TEMP PIC X(35).
+           05 D_EMAIL_TEMP PIC X(35).
+           05 D_PHONE_TEMP PIC X(11).
+
+       FD  DONATIONS. 
+       01  DONATION-RECORDS.
+           05 DONATION_USER PIC X(25).
+           05 DONATION_FULLNAME PIC X(25).
+           05 DONOR PIC X(25).
+           05 DONATE_ORG PIC X(10).
+           05 DONATION_AMOUNT PIC 9(9).
+           
+
+       WORKING-STORAGE SECTION.
+       01  USER-CHOICE PIC 9(1).
+       01  USER-CHOICE1 PIC X(1).
+       01  VOLUNTEER_CHOICE PIC 9(1).
+       01  DONOR_CHOICE PIC 9(1).
+       01  VOLUNTEER_CONPASSWORD PIC X(15).
+       01  DONOR_CONPASSWORD PIC X(15).
+       01  YESORNO PIC X(1).
+       01  REGISTER_USERNAME PIC X(20).
+       01  LOGIN_USERNAME PIC X(20).
+       01  LOGIN_PASSWORD PIC X(20).
+       01  UPDATE_CHOICE PIC X(1).
+       01  RECORD-FOUND PIC X(1) VALUE "N".
+       01  EOF PIC X(1) VALUE "N".
+       01  USERNAME PIC X(25).
+       01  NEW_USERNAME PIC X(25).
+       01  NEW_PASSWORD PIC X(25).
+       01  NEW_FULLNAME PIC X(25).
+       01  NEW_EMAIL PIC X(25).
+       01  NEW_PHONE PIC X(25).
+
+       01  D_NEW_USERNAME PIC X(25).
+       01  D_NEW_PASSWORD PIC X(25).
+       01  D_NEW_FULLNAME PIC X(25).
+       01  D_NEW_EMAIL PIC X(25).
+       01  D_NEW_PHONE PIC X(25).
+
+       01  ADMIN_CHOICE PIC 9.
+
+       01  ADMIN-PASSWORD.
+           05  STORED-ADMIN-PASSWORD PIC X(25) VALUE "admin123".
+           05  STORED-ADMIN-USERNAME PIC X(25) VALUE "admin".
+           05  ENTERED-ADMIN-PASSWORD PIC X(25).
+           05  ENTERED-ADMIN-USERNAME PIC X(25).
+       01  VALID-ADMIN-SWITCH PIC X VALUE 'N'.
+
+      *Choose orgs VOLUNTEER
+       01  VOLUNTEER_ORG PIC X(10).
+       01  SCHED_MON PIC X(2).
+       01  SCHED_DAY PIC X(2).
+       01  SCHED_YEAR PIC X(4).
+
+       PROCEDURE DIVISION.
+       FIRST_STEP.
+           PERFORM UNTIL USER-CHOICE = 4
+           CALL "SYSTEM" USING "clear"
+           DISPLAY "================================================="
+           DISPLAY "|  WELCOME TO ITUPAD DONATION TRACKING SYSTEM!  |"
+           DISPLAY "|   1 - Volunteer                               |"
+           DISPLAY "|   2 - Donor                                   |"  
+           DISPLAY "|   3 - Admin                                   |"                                  
+           DISPLAY "|   4 - Exit                                    |"
+           DISPLAY "================================================="
+           DISPLAY "| Enter your choice: " NO ADVANCING
+           ACCEPT USER-CHOICE
+
+               EVALUATE TRUE
+                   WHEN USER-CHOICE = 1 
+                       PERFORM VOLUNTEER_FUNCTION
+                   WHEN USER-CHOICE = 2 
+                       PERFORM DONOR_FUNCTION
+                   WHEN USER-CHOICE = 3 
+                       PERFORM CHECK_ADMIN
+                   WHEN USER-CHOICE = 4
+                        CALL "SYSTEM" USING "clear"
+                       DISPLAY "Thank you for using ITUPAD Donation"
+                               " Tracking System!."
+                       STOP RUN
+                   WHEN OTHER 
+                       DISPLAY "Invalid option. Please try again." 
+                       ACCEPT OMITTED
+                       PERFORM FIRST_STEP
+               END-EVALUATE
+           END-PERFORM.
+
+      *START NG FUNCTIONS
+       VOLUNTEER_FUNCTION.
+           CALL "SYSTEM" USING "clear"
+           DISPLAY "================================================="
+           DISPLAY "|       WELCOME TO ITUPAD VOLUNTEER PAGE!       |"
+           DISPLAY "|   1 - Register                                |"
+           DISPLAY "|   2 - Login                                   |"
+           DISPLAY "|   3 - Back                                    |"
+           DISPLAY "================================================="
+           DISPLAY "|Enter your choice: " NO ADVANCING
+           ACCEPT VOLUNTEER_CHOICE
+
+           EVALUATE TRUE
+               WHEN VOLUNTEER_CHOICE = 1
+                   PERFORM VOLUNTEER_REGISTER_FUNCTION
+               WHEN VOLUNTEER_CHOICE = 2
+                   PERFORM VOLUNTEER_LOGIN_FUNCTION
+               WHEN VOLUNTEER_CHOICE = 3
+                   PERFORM FIRST_STEP
+               WHEN OTHER
+                   DISPLAY "Invalid option. Please try again. "
+           END-EVALUATE.
+
+       DONOR_FUNCTION.
+           CALL "SYSTEM" USING "clear"
+           
+           DISPLAY "================================================="
+           DISPLAY "|         WELCOME TO ITUPAD DONOR PAGE!         |"
+           DISPLAY "|   1 - Register                                |"
+           DISPLAY "|   2 - Login                                   |"
+           DISPLAY "|   3 - Back                                    |"
+           DISPLAY "================================================="
+           DISPLAY "|Enter your choice: " NO ADVANCING
+           ACCEPT DONOR_CHOICE
+
+           EVALUATE TRUE
+               WHEN DONOR_CHOICE = 1
+                   PERFORM DONOR_REGISTER_FUNCTION
+               WHEN DONOR_CHOICE = 2
+                   PERFORM DONOR_LOGIN_FUNCTION
+               WHEN DONOR_CHOICE = 3
+                   PERFORM FIRST_STEP
+               WHEN OTHER
+                   DISPLAY "Invalid option. Please try again. "
+           END-EVALUATE.
+
+       VOLUNTEER_REGISTER_FUNCTION.
+           CALL "SYSTEM" USING "clear"
+           
+           OPEN EXTEND VOLUNTEERS
+           DISPLAY "ITUPAD VOLUNTEER REGISTRATION FORM"
+        
+           DISPLAY "Enter your username: " NO ADVANCING
+           ACCEPT REGISTER_USERNAME
+
+      * Check IF the USERNAME already exists
+           CLOSE VOLUNTEERS
+           OPEN INPUT VOLUNTEERS
+           MOVE "N" TO RECORD-FOUND
+           PERFORM UNTIL EOF = "Y"
+               READ VOLUNTEERS
+               AT END
+                   MOVE "Y" TO EOF
+               NOT AT END
+                   IF REGISTER_USERNAME = VOLUNTEER_USERNAME
+                       DISPLAY "Username already exists. "
+                       "Please choose a different one."
+                       CLOSE VOLUNTEERS
+                       ACCEPT OMITTED
+                       PERFORM VOLUNTEER_REGISTER_FUNCTION
+                   END-IF
+               END-READ
+           END-PERFORM
+
+           CLOSE VOLUNTEERS
+
+           OPEN EXTEND VOLUNTEERS
+
+           MOVE REGISTER_USERNAME TO VOLUNTEER_USERNAME
+
+      *    Check if the password matches the confirm password
+           PERFORM UNTIL VOLUNTEER_PASSWORD = VOLUNTEER_CONPASSWORD
+               DISPLAY "Enter your password: " NO ADVANCING
+               ACCEPT VOLUNTEER_PASSWORD
+    
+               DISPLAY "Confirm your password: " NO ADVANCING
+               ACCEPT VOLUNTEER_CONPASSWORD
+
+               IF VOLUNTEER_PASSWORD NOT = VOLUNTEER_CONPASSWORD
+                   DISPLAY "Passwords do not match. Please retype your "
+                           "password"
+               END-IF
+           END-PERFORM 
+           CLOSE VOLUNTEERS
+
+           OPEN EXTEND VOLUNTEERS
+           DISPLAY "Enter your full name "
+           "(Surname, Name, Middle Initial): " NO ADVANCING
+           ACCEPT VOLUNTEER_FULLNAME
+    
+           DISPLAY "Enter your email address: " NO ADVANCING
+           ACCEPT VOLUNTEER_EMAIL
+    
+           DISPLAY "Enter your phone number "
+           "(e.g., 09123456789 or +639123456789): " NO ADVANCING
+           ACCEPT VOLUNTEER_PHONE
+
+           DISPLAY "Registration Successful!"
+           DISPLAY " "
+           DISPLAY "Please Enter to proceed to Login."
+           ACCEPT OMITTED
+
+           WRITE VOLUNTEER-RECORDS
+           CLOSE VOLUNTEERS.
+
+           PERFORM VOLUNTEER_LOGIN_FUNCTION.
+
+       VOLUNTEER_LOGIN_FUNCTION.
+           CALL "SYSTEM" USING "clear"
+           OPEN INPUT VOLUNTEERS
+           MOVE "N" TO RECORD-FOUND
+           MOVE "N" TO EOF
+
+           DISPLAY "ITUPAD VOLUNTEER LOGIN FORM"
+           DISPLAY "Enter your username: " NO ADVANCING
+           ACCEPT LOGIN_USERNAME
+           DISPLAY "Enter your password: " NO ADVANCING
+           ACCEPT LOGIN_PASSWORD
+
+           PERFORM UNTIL EOF = "Y"
+               READ VOLUNTEERS
+                   AT END
+                       MOVE "Y" TO EOF
+                   NOT AT END
+                       IF LOGIN_USERNAME = VOLUNTEER_USERNAME AND
+                          LOGIN_PASSWORD = VOLUNTEER_PASSWORD
+                          DISPLAY "Login Successful!"
+                          ACCEPT OMITTED
+                          PERFORM VOLUNTEER_PAGE
+                          MOVE "Y" TO RECORD-FOUND
+                          MOVE "Y" TO EOF
+                       END-IF
+               END-READ
+           END-PERFORM
+
+           CLOSE VOLUNTEERS
+
+           IF RECORD-FOUND = "N"
+               DISPLAY "Invalid username or password. Please try again."
+               ACCEPT OMITTED
+               PERFORM VOLUNTEER_LOGIN_FUNCTION
+           END-IF
+           ACCEPT OMITTED.
+
+       VOLUNTEER_PAGE.
+           CLOSE VOLUNTEERS
+
+           CALL "SYSTEM" USING "clear"
+           DISPLAY "Welcome to the Volunteer Page!"
+           DISPLAY "1 - View Profile"
+           DISPLAY "2 - Update Record"
+           DISPLAY "3 - Volunteer here!"
+           DISPLAY "4 - Logout"
+           DISPLAY "Enter your choice: " NO ADVANCING
+           ACCEPT UPDATE_CHOICE
+
+           EVALUATE UPDATE_CHOICE
+               WHEN 1
+                   PERFORM VIEW_VOLUNTEER_PROFILE
+               WHEN 2
+                   PERFORM UPDATE_VOLUNTEER_RECORD
+               WHEN 3
+                   PERFORM VOLUNTEERING
+               WHEN 4
+                   PERFORM FIRST_STEP
+               WHEN OTHER
+                   DISPLAY "Invalid option. Try again."
+                   PERFORM VOLUNTEER_PAGE
+           END-EVALUATE.
+
+      *dito muna ko START
+       VOLUNTEERING.
+           CALL "SYSTEM" USING "clear"
+       
+           DISPLAY "Choose organization to volunteer"
+           DISPLAY "1 - CS"
+           DISPLAY "2 - JMA" 
+           DISPLAY "3 - JPIA" 
+           DISPLAY "Choose org: " NO ADVANCING
+           ACCEPT VOLUNTEER_ORG
+           
+           DISPLAY "Schedule kineme"
+           DISPLAY "Month (1-12): "
+           ACCEPT SCHED_MON
+           DISPLAY "Day (1-32): "
+           ACCEPT SCHED_DAY
+           DISPLAY "Year (e.g., 2024): "
+           ACCEPT SCHED_YEAR.
+      *    DISPLAY "Time (e.g., 08:00 AM): "
+      *    ACCEPT SCHED_TIME
+
+
+       VIEW_VOLUNTEER_PROFILE.
+           MOVE "N" TO RECORD-FOUND
+           MOVE "N" TO EOF
+
+           OPEN INPUT VOLUNTEERS
+
+           PERFORM UNTIL EOF = "Y"
+           READ VOLUNTEERS
+            AT END
+                MOVE "Y" TO EOF
+            NOT AT END
+                IF LOGIN_USERNAME = VOLUNTEER_USERNAME
+                    DISPLAY "==============================="
+                    DISPLAY "       YOUR PROFILE"
+                    DISPLAY "==============================="
+                    DISPLAY "Username   : " VOLUNTEER_USERNAME
+                    DISPLAY "Full Name  : " VOLUNTEER_FULLNAME
+                    DISPLAY "Email      : " VOLUNTEER_EMAIL
+                    DISPLAY "Phone      : " VOLUNTEER_PHONE
+                    MOVE "Y" TO RECORD-FOUND
+                    MOVE "Y" TO EOF
+                END-IF
+             END-READ
+           END-PERFORM
+
+           ACCEPT OMITTED
+           PERFORM VOLUNTEER_PAGE
+           CLOSE VOLUNTEERS
+
+           IF RECORD-FOUND = "N"
+           DISPLAY "Profile not found. Please try again."
+           PERFORM VOLUNTEER_PAGE
+           END-IF.
+
+           EXIT PROGRAM.
+
+       UPDATE_VOLUNTEER_RECORD.
+
+           OPEN INPUT VOLUNTEERS
+           OPEN OUTPUT TEMP_VOLUNTEER
+
+           DISPLAY "Enter the username of your account to update: "
+           NO ADVANCING
+           ACCEPT USERNAME
+
+           MOVE "N" TO RECORD-FOUND
+           MOVE "N" TO EOF
+
+           PERFORM UNTIL EOF = "Y"
+               READ VOLUNTEERS
+                   AT END
+                       MOVE "Y" TO EOF
+
+                   NOT AT END
+                    IF VOLUNTEER_USERNAME = USERNAME
+                       DISPLAY "Record found!"
+                       DISPLAY "Which part do you want to update?"
+                       DISPLAY "1 - Username"
+                       DISPLAY "2 - Phone"
+                       DISPLAY "3 - Email"
+                       DISPLAY "4 - Full Name"
+                       DISPLAY "5 - Password"
+                       DISPLAY "Enter your choice (1-5): " NO ADVANCING
+                       ACCEPT UPDATE_CHOICE
+
+                       EVALUATE UPDATE_CHOICE
+                           WHEN 1
+                           DISPLAY "Enter new username: " NO ADVANCING
+                           ACCEPT NEW_USERNAME
+                           MOVE NEW_USERNAME TO V_USERNAME_TEMP
+                           MOVE NEW_USERNAME TO LOGIN_USERNAME
+                           MOVE VOLUNTEER_EMAIL TO V_EMAIL_TEMP
+                           MOVE VOLUNTEER_PHONE TO V_PHONE_TEMP
+                           MOVE VOLUNTEER_FULLNAME TO V_FULLNAME_TEMP
+                           MOVE VOLUNTEER_PASSWORD TO V_PASSWORD_TEMP
+
+                           WHEN 2
+                           DISPLAY "Enter new phone: " NO ADVANCING
+                           ACCEPT NEW_PHONE
+                           MOVE VOLUNTEER_USERNAME TO V_USERNAME_TEMP
+                           MOVE VOLUNTEER_EMAIL TO V_EMAIL_TEMP
+                           MOVE NEW_PHONE TO V_PHONE_TEMP
+                           MOVE VOLUNTEER_FULLNAME TO V_FULLNAME_TEMP
+                           MOVE VOLUNTEER_PASSWORD TO V_PASSWORD_TEMP
+
+                           WHEN 3
+                           DISPLAY "Enter new email: " NO ADVANCING
+                           ACCEPT NEW_EMAIL
+                           MOVE VOLUNTEER_USERNAME TO V_USERNAME_TEMP
+                           MOVE NEW_EMAIL TO V_EMAIL_TEMP
+                           MOVE VOLUNTEER_PHONE TO V_PHONE_TEMP
+                           MOVE VOLUNTEER_FULLNAME TO V_FULLNAME_TEMP
+                           MOVE VOLUNTEER_PASSWORD TO V_PASSWORD_TEMP
+
+                           WHEN 4
+                           DISPLAY "Enter new full name "
+                           "(Surname, Name, Middle Initial): " 
+                           NO ADVANCING
+                           ACCEPT NEW_FULLNAME
+                           MOVE VOLUNTEER_USERNAME TO V_USERNAME_TEMP
+                           MOVE VOLUNTEER_EMAIL TO V_EMAIL_TEMP
+                           MOVE VOLUNTEER_PHONE TO V_PHONE_TEMP
+                           MOVE NEW_FULLNAME TO V_FULLNAME_TEMP
+                           MOVE VOLUNTEER_PASSWORD TO V_PASSWORD_TEMP
+
+                           WHEN 5
+                           DISPLAY "Enter new password: " NO ADVANCING
+                           ACCEPT NEW_PASSWORD
+                           MOVE VOLUNTEER_USERNAME TO V_USERNAME_TEMP
+                           MOVE VOLUNTEER_EMAIL TO V_EMAIL_TEMP
+                           MOVE VOLUNTEER_PHONE TO V_PHONE_TEMP
+                           MOVE NEW_FULLNAME TO V_FULLNAME_TEMP
+                           MOVE NEW_PASSWORD TO V_PASSWORD_TEMP
+
+                      END-EVALUATE
+                       WRITE TEMP-VOLUNTEER-RECORDS
+                       MOVE "Y" TO RECORD-FOUND
+                  ELSE
+                     WRITE TEMP-VOLUNTEER-RECORDS FROM VOLUNTEER-RECORDS
+                  END-IF
+               END-READ
+           END-PERFORM
+
+           CLOSE VOLUNTEERS
+           CLOSE TEMP_VOLUNTEER
+
+
+               IF RECORD-FOUND = "Y"
+                   CALL "SYSTEM" USING "rm VOLUNTEERS.dat"
+             CALL "SYSTEM" USING "mv TEMP_VOLUNTEER.dat VOLUNTEERS.dat"
+             DISPLAY "Record updated successfully."
+
+               ELSE
+                   CALL "SYSTEM" USING "rm TEMP_VOLUNTEER.dat"
+                   DISPLAY "Record not found."
+               END-IF.
+
+           ACCEPT OMITTED.
+           OPEN INPUT VOLUNTEERS
+           PERFORM VOLUNTEER_PAGE
+           EXIT PROGRAM.
+
+       DONOR_REGISTER_FUNCTION.
+           CALL "SYSTEM" USING "clear"
+
+           OPEN EXTEND DONORS
+           DISPLAY "ITUPAD DONOR REGISTRATION FORM"
+
+           DISPLAY "Enter your username: " NO ADVANCING
+           ACCEPT REGISTER_USERNAME
+
+      * Check IF the USERNAME already exists
+           CLOSE DONORS
+           OPEN INPUT DONORS
+           MOVE "N" TO RECORD-FOUND
+           PERFORM UNTIL EOF = "Y"
+               READ DONORS
+               AT END
+                   MOVE "Y" TO EOF
+               NOT AT END
+                   IF REGISTER_USERNAME = DONOR_USERNAME
+                       DISPLAY "Username already exists. "
+                       "Please choose a different one."
+                       CLOSE DONORS
+                       ACCEPT OMITTED
+                       PERFORM DONOR_REGISTER_FUNCTION
+                   END-IF
+               END-READ
+           END-PERFORM
+    
+           CLOSE DONORS
+    
+           OPEN EXTEND DONORS
+    
+           MOVE REGISTER_USERNAME TO DONOR_USERNAME
+
+      *    Check IF the PASSWORD matches the confirm password
+           PERFORM UNTIL DONOR_PASSWORD = DONOR_CONPASSWORD
+               DISPLAY "Enter your password: " NO ADVANCING
+               ACCEPT DONOR_PASSWORD
+    
+               DISPLAY "Confirm your password: " NO ADVANCING
+               ACCEPT DONOR_CONPASSWORD
+
+               IF DONOR_PASSWORD NOT = DONOR_CONPASSWORD
+                   DISPLAY "Passwords do not match. Please retype your "
+                           "password"
+               END-IF
+           END-PERFORM
+           CLOSE DONORS
+           
+           OPEN EXTEND DONORS
+           DISPLAY "Enter your full name "
+           "(Surname, Name, Middle Initial): " NO ADVANCING
+           ACCEPT DONOR_FULLNAME
+
+           DISPLAY "Enter your email address: " NO ADVANCING
+           ACCEPT DONOR_EMAIL
+
+           DISPLAY "Enter your phone number "
+           "(e.g., 09123456789 or +639123456789): " NO ADVANCING
+           ACCEPT DONOR_PHONE
+       
+           DISPLAY "Registration Successful!"
+           DISPLAY " "
+           DISPLAY "Please Enter to proceed to Login"
+           ACCEPT OMITTED
+
+           WRITE DONOR-RECORDS
+           CLOSE DONORS.
+
+           PERFORM DONOR_LOGIN_FUNCTION.
+
+       DONOR_LOGIN_FUNCTION.
+           CALL "SYSTEM" USING "clear"
+           OPEN INPUT DONORS
+           MOVE "N" TO RECORD-FOUND
+           MOVE "N" TO EOF
+
+           DISPLAY "ITUPAD DONOR LOGIN FORM"
+           DISPLAY "Enter your username: " NO ADVANCING
+           ACCEPT LOGIN_USERNAME
+           DISPLAY "Enter your password: " NO ADVANCING
+           ACCEPT LOGIN_PASSWORD
+
+           PERFORM UNTIL EOF = "Y"
+               READ DONORS
+                   AT END
+                       MOVE "Y" TO EOF
+                   NOT AT END
+                       IF LOGIN_USERNAME = DONOR_USERNAME AND
+                          LOGIN_PASSWORD = DONOR_PASSWORD
+                          DISPLAY "Login Successful!"
+                          ACCEPT OMITTED
+                          PERFORM DONORS_PAGE
+                          MOVE "Y" TO RECORD-FOUND
+                          MOVE "Y" TO EOF
+                       END-IF
+               END-READ
+           END-PERFORM
+
+           CLOSE DONORS
+
+           IF RECORD-FOUND = "N"
+               DISPLAY "Invalid username or password. Please try again."
+               ACCEPT OMITTED
+               PERFORM DONOR_LOGIN_FUNCTION
+               OPEN INPUT DONORS
+           END-IF
+           ACCEPT OMITTED.
+
+           DONORS_PAGE.
+               CLOSE DONORS
+           CALL "SYSTEM" USING "clear"
+               DISPLAY "Welcome to the Donor's Page!"
+               DISPLAY "1 - View Profile"
+               DISPLAY "2 - Update Profile"
+               DISPLAY "3 - Donate"
+               DISPLAY "4 - Back"
+               DISPLAY "Enter your choice: " WITH NO ADVANCING
+               ACCEPT UPDATE_CHOICE
+
+               EVALUATE UPDATE_CHOICE
+                WHEN 1
+                   PERFORM VIEW_DONORS_PROFILE
+
+                WHEN 2
+                   PERFORM UPDATE_DONORS_RECORD
+
+                WHEN 3
+                   
+                   PERFORM DONOR_DONATE
+                   
+                WHEN 4
+                   PERFORM FIRST_STEP
+
+                WHEN OTHER
+                   DISPLAY "Invalid option. Try again."
+                   PERFORM DONORS_PAGE
+
+               END-EVALUATE.
+
+       VIEW_DONORS_PROFILE.
+           MOVE "N" TO RECORD-FOUND
+           MOVE "N" TO EOF
+
+           OPEN INPUT DONORS
+
+           PERFORM UNTIL EOF = "Y"
+           READ DONORS
+            AT END
+                MOVE "Y" TO EOF
+            NOT AT END
+                IF LOGIN_USERNAME = DONOR_USERNAME
+                    DISPLAY "==============================="
+                    DISPLAY "       YOUR PROFILE"
+                    DISPLAY "==============================="
+                    DISPLAY "Username   : " DONOR_USERNAME
+                    DISPLAY "Full Name  : " DONOR_FULLNAME
+                    DISPLAY "Email      : " DONOR_EMAIL
+                    DISPLAY "Phone      : " DONOR_PHONE
+                    MOVE "Y" TO RECORD-FOUND
+                    MOVE "Y" TO EOF
+                END-IF
+             END-READ
+           END-PERFORM
+
+           ACCEPT OMITTED
+           PERFORM DONORS_PAGE
+           CLOSE DONORS
+
+           IF RECORD-FOUND = "N"
+           DISPLAY "Profile not found. Please try again."
+           PERFORM DONORS_PAGE
+           END-IF.
+
+           EXIT PROGRAM.
+
+       UPDATE_DONORS_RECORD.
+
+           OPEN INPUT DONORS
+           OPEN OUTPUT TEMP_DONORS
+
+           DISPLAY "Enter the username of your account to update: "
+           NO ADVANCING
+           ACCEPT USERNAME
+
+           MOVE "N" TO RECORD-FOUND
+           MOVE "N" TO EOF
+
+           PERFORM UNTIL EOF = "Y"
+               READ DONORS
+                   AT END
+                       MOVE "Y" TO EOF
+
+                   NOT AT END
+                    IF DONOR_USERNAME = USERNAME
+                       DISPLAY "Record found!"
+                       DISPLAY "Which part do you want to update?"
+                       DISPLAY "1 - Username"
+                       DISPLAY "2 - Phone"
+                       DISPLAY "3 - Email"
+                       DISPLAY "4 - Full Name"
+                       DISPLAY "5 - Password"
+                       DISPLAY "Enter your choice (1-5): " NO ADVANCING
+                       ACCEPT UPDATE_CHOICE
+
+                       EVALUATE UPDATE_CHOICE
+                           WHEN 1
+                           DISPLAY "Enter new username: " NO ADVANCING
+                           ACCEPT D_NEW_USERNAME
+                           MOVE D_NEW_USERNAME TO D_USERNAME_TEMP
+                           MOVE D_NEW_USERNAME TO LOGIN_USERNAME
+                           MOVE DONOR_EMAIL TO D_EMAIL_TEMP
+                           MOVE DONOR_PHONE TO D_PHONE_TEMP
+                           MOVE DONOR_FULLNAME TO D_FULLNAME_TEMP
+                           MOVE DONOR_PASSWORD TO D_PASSWORD_TEMP
+
+                           WHEN 2
+                           DISPLAY "Enter new phone: " NO ADVANCING
+                           ACCEPT D_NEW_PHONE
+                           MOVE DONOR_USERNAME TO D_USERNAME_TEMP
+                           MOVE DONOR_EMAIL TO D_EMAIL_TEMP
+                           MOVE D_NEW_PHONE TO D_PHONE_TEMP
+                           MOVE DONOR_FULLNAME TO D_FULLNAME_TEMP
+                           MOVE DONOR_PASSWORD TO D_PASSWORD_TEMP
+
+                           WHEN 3
+                           DISPLAY "Enter new email: " NO ADVANCING
+                           ACCEPT D_NEW_EMAIL
+                           MOVE DONOR_USERNAME TO D_USERNAME_TEMP
+                           MOVE D_NEW_EMAIL TO D_EMAIL_TEMP
+                           MOVE DONOR_PHONE TO D_PHONE_TEMP
+                           MOVE DONOR_FULLNAME TO D_FULLNAME_TEMP
+                           MOVE DONOR_PASSWORD TO D_PASSWORD_TEMP
+
+                           WHEN 4
+                           DISPLAY "Enter new full name: "
+                           "(Surname, Name, Middle Initial): " 
+                           NO ADVANCING
+                           ACCEPT D_NEW_FULLNAME
+                           MOVE DONOR_USERNAME TO D_USERNAME_TEMP
+                           MOVE DONOR_EMAIL TO D_EMAIL_TEMP
+                           MOVE DONOR_PHONE TO D_PHONE_TEMP
+                           MOVE D_NEW_FULLNAME TO D_FULLNAME_TEMP
+                           MOVE DONOR_PASSWORD TO D_PASSWORD_TEMP
+
+                           WHEN 5
+                           DISPLAY "Enter new password: " NO ADVANCING
+                           ACCEPT D_NEW_PASSWORD
+                           MOVE DONOR_USERNAME TO D_USERNAME_TEMP
+                           MOVE DONOR_EMAIL TO D_EMAIL_TEMP
+                           MOVE DONOR_PHONE TO D_PHONE_TEMP
+                           MOVE DONOR_FULLNAME TO D_FULLNAME_TEMP
+                           MOVE D_NEW_PASSWORD TO D_PASSWORD_TEMP
+               
+                      END-EVALUATE
+                       WRITE TEMP-DONORS-RECORDS
+                       MOVE "Y" TO RECORD-FOUND
+                  ELSE
+                     WRITE TEMP-DONORS-RECORDS FROM DONOR-RECORDS
+                  END-IF
+               END-READ
+           END-PERFORM
+
+           CLOSE DONORS
+           CLOSE TEMP_DONORS
+
+
+               IF RECORD-FOUND = "Y"
+                   CALL "SYSTEM" USING "rm DONORS.dat"
+             CALL "SYSTEM" USING "mv TEMP_DONORS.dat DONORS.dat"
+             DISPLAY "Record updated successfully."
+
+               ELSE
+                   CALL "SYSTEM" USING "rm TEMP_DONORS.dat"
+                   DISPLAY "Record not found."
+               END-IF.
+
+           ACCEPT OMITTED.
+           OPEN INPUT DONORS
+           PERFORM DONORS_PAGE
+           EXIT PROGRAM.
+
+
+           CHECK_ADMIN.
+           CALL "SYSTEM" USING "clear"
+           DISPLAY "Enter admin username: " NO ADVANCING.
+           ACCEPT ENTERED-ADMIN-USERNAME.
+           DISPLAY "Enter admin password: " NO ADVANCING.
+           ACCEPT ENTERED-ADMIN-PASSWORD.
+
+           IF ENTERED-ADMIN-USERNAME = STORED-ADMIN-USERNAME
+               AND ENTERED-ADMIN-PASSWORD = STORED-ADMIN-PASSWORD
+               MOVE 'Y' TO VALID-ADMIN-SWITCH
+               DISPLAY "ACCESS GRANTED..." 
+               PERFORM ADMIN_FUNCTION
+           ELSE
+               DISPLAY "ACCESS DENIED. Going back..."
+               ACCEPT OMITTED
+               PERFORM FIRST_STEP
+           END-IF.
+
+           ADMIN_FUNCTION.
+           PERFORM UNTIL ADMIN_CHOICE = 5
+           CALL "SYSTEM" USING "clear" 
+    
+           DISPLAY "WELCOME TO ITUPAD ADMIN PAGE!"
+           DISPLAY "1 - View Record"
+           DISPLAY "2 - Update Record"
+           DISPLAY "3 - Delete Record"
+           DISPLAY "4 - Compute Total Donations "
+           DISPLAY "5 - Back"
+           DISPLAY "-------------------------------"
+           DISPLAY "Enter your choice: " NO ADVANCING
+           ACCEPT ADMIN_CHOICE
+    
+           EVALUATE ADMIN_CHOICE
+               WHEN 1
+                   PERFORM VIEW-RECORDS
+               WHEN 2
+                   PERFORM UPDATE-RECORDS
+               WHEN 3
+                   PERFORM DELETE-RECORDS
+               WHEN 4
+                   PERFORM COMPUTE-DONATIONS
+               WHEN 5
+                   PERFORM FIRST_STEP
+               WHEN OTHER
+                   DISPLAY "Invalid Option. Please try again."               
+           END-EVALUATE
+           END-PERFORM.
+
+           VIEW-RECORDS.
+               DISPLAY "Do you want to view Donors' records or " 
+               "Volunteers' records?" 
+               DISPLAY "1 - Donor Records" 
+               DISPLAY "2 - Volunteer Records"
+               DISPLAY "3 - Back"
+               DISPLAY "Enter your choice: "
+               ACCEPT USER-CHOICE
+
+               EVALUATE USER-CHOICE
+                WHEN 1 
+                   PERFORM ALL_DONOR_RECORDS
+                   PERFORM ADMIN_FUNCTION
+
+                WHEN 2
+                   PERFORM ALL_VOLUNTEER_RECORDS
+                   PERFORM ADMIN_FUNCTION
+
+
+                WHEN 3 
+                   PERFORM FIRST_STEP
+
+                WHEN OTHER
+                   DISPLAY "Invalid option. Please try again."
+                   PERFORM VIEW-RECORDS
+                
+
+                END-EVALUATE.
+              
+           ALL_DONOR_RECORDS.
+           CALL "SYSTEM" USING "clear"
+           
+               MOVE "N" TO EOF
+    
+               OPEN INPUT DONORS
+    
+               PERFORM UNTIL EOF = "Y"
+               READ DONORS
+                AT END
+                    MOVE "Y" TO EOF
+                NOT AT END
+                        DISPLAY "==============================="
+                        DISPLAY "         USER PROFILE"
+                        DISPLAY "==============================="
+                        DISPLAY "Username   : " DONOR_USERNAME
+                        DISPLAY "Full Name  : " DONOR_FULLNAME
+                        DISPLAY "Email      : " DONOR_EMAIL
+                        DISPLAY "Phone      : " DONOR_PHONE 
+                 END-READ
+               END-PERFORM
+    
+               ACCEPT OMITTED
+               CLOSE DONORS
+               PERFORM ADMIN_FUNCTION
+       
+
+           EXIT PROGRAM.
+             
+
+           ALL_VOLUNTEER_RECORDS.
+           CALL "SYSTEM" USING "clear"
+               MOVE "N" TO EOF
+    
+               OPEN INPUT VOLUNTEERS
+    
+               PERFORM UNTIL EOF = "Y"
+               READ VOLUNTEERS
+                AT END
+                    MOVE "Y" TO EOF
+                NOT AT END
+                        DISPLAY "==============================="
+                        DISPLAY "         USER PROFILE"
+                        DISPLAY "==============================="
+                        DISPLAY "Username   : " VOLUNTEER_USERNAME
+                        DISPLAY "Full Name  : " VOLUNTEER_FULLNAME
+                        DISPLAY "Email      : " VOLUNTEER_EMAIL
+                        DISPLAY "Phone      : " VOLUNTEER_PHONE
+                 END-READ
+               END-PERFORM
+    
+               ACCEPT OMITTED
+               CLOSE VOLUNTEERS
+ 
+              
+               PERFORM ADMIN_FUNCTION
+        
+               EXIT PROGRAM.
+             
+
+      *        PERFORM READ-DONORS.
+
+           UPDATE-RECORDS.
+               DISPLAY "What category?"
+               DISPLAY "1 - Volunteer"
+               DISPLAY "2- Donor"
+               DISPLAY "Enter your choice:"
+               ACCEPT ADMIN_CHOICE
+
+               EVALUATE ADMIN_CHOICE
+                WHEN 1
+                   PERFORM UPDATE_VOLUNTEER_RECORD
+
+                END-EVALUATE.
+    
+           DELETE-RECORDS.
+               DISPLAY "Deleting records...".
+   
+    
+           COMPUTE-DONATIONS.
+               DISPLAY "Computing total donations...".
+         
+    
+           READ-VOLUNTEERS.
+               OPEN INPUT VOLUNTEERS.
+               DISPLAY "Reading Volunteer Records...".
+               CLOSE VOLUNTEERS.
+    
+      *     READ-DONORS.
+      *        OPEN INPUT DONORS.
+      *        DISPLAY "Reading Donor Records...".
+      *        CLOSE DONORS.
+
+           DONOR_DONATE.
+           OPEN EXTEND DONATIONS
+           OPEN INPUT DONORS
+           
+           PERFORM UNTIL USER-CHOICE1 = 'X' OR 'x'
+           CALL "SYSTEM" USING "clear"
+           MOVE DONOR_USERNAME TO DONATION_USER
+           MOVE DONOR_FULLNAME TO DONATION_FULLNAME
+           MOVE SPACES TO USER-CHOICE1
+
+           
+           DISPLAY "This is the list of organizations you can donate."
+           DISPLAY "A - CS"
+           DISPLAY "B - JMA"
+           DISPLAY "C - AECES"
+           DISPLAY "X - Back"
+
+           DISPLAY "What org would you like to donate: "
+           ACCEPT USER-CHOICE1
+
+           EVALUATE TRUE
+               WHEN USER-CHOICE1 = 'A' OR USER-CHOICE1 = 'a'
+                   MOVE "CS" TO DONATE_ORG
+                   PERFORM DONATION_CONTINUATION
+              WHEN USER-CHOICE1 = 'B' OR USER-CHOICE1 = 'b'
+                   MOVE "JMA" TO DONATE_ORG
+                   PERFORM DONATION_CONTINUATION
+              WHEN USER-CHOICE1 = 'C' OR USER-CHOICE1 = 'c'
+                   MOVE "AECES" TO DONATE_ORG
+                   PERFORM DONATION_CONTINUATION
+              WHEN USER-CHOICE1 = 'X' OR USER-CHOICE1 = 'x'
+                   CLOSE DONATIONS
+                   PERFORM DONORS_PAGE
+              WHEN OTHER
+               DISPLAY "Invalid option. Please try again."
+               PERFORM DONOR_DONATE
+
+            END-EVALUATE
+           END-PERFORM.
+
+           DONATION_CONTINUATION.
+           DISPLAY "Donation amount: " NO ADVANCING
+           ACCEPT DONATION_AMOUNT
+           CALL "SYSTEM" USING "clear" 
+
+           DISPLAY "Username: " DONATION_USER
+           DISPLAY "Full Name: " DONATION_FULLNAME
+           DISPLAY "Donation amount: " DONATION_AMOUNT 
+           DISPLAY "Recipient Organization: " DONATE_ORG
+           DISPLAY "Do you want to proceed with this donation?(Y/N):"
+           ACCEPT YESORNO
+
+           EVALUATE TRUE
+            WHEN YESORNO = 'Y' or YESORNO = 'y'
+               DISPLAY "You successfully donated an amount of "
+               DONATION_AMOUNT " to " DONATE_ORG ". Thank you."
+               PERFORM DONORS_PAGE 
+            WHEN YESORNO = 'N' or YESORNO = 'n'
+               DISPLAY "Donation cancelled."
+               ACCEPT OMITTED
+               CLOSE DONATIONS
+               PERFORM DONORS_PAGE
+
+            END-EVALUATE
+
+           WRITE DONATION-RECORDS
+           CLOSE DONATIONS
+           ACCEPT OMITTED.
+           EXIT PROGRAM.
+
+       STOP RUN.
+       END PROGRAM test2.
